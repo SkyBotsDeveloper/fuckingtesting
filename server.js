@@ -448,113 +448,43 @@ svg[viewBox="0 0 15 15"] path[d*="M5.07451"] {
   function replaceLogo() {
     if (!CUSTOM_LOGO_URL) return;
 
-    // Create the logo element
-    const newLogo = document.createElement('img');
-    newLogo.src = CUSTOM_LOGO_URL;
-    newLogo.alt = 'Entertainment Cinema';
-    newLogo.style.cssText = 'height: 34px; width: auto; display: inline-block; vertical-align: middle; margin-right: 12px;';
+    const nav = document.querySelector('nav, header, .navbar');
+    if (!nav) return;
 
-    // ==========================================
-    // 1. WATCH PAGE PLAYER HEADER (Text preserved!)
-    // ==========================================
-    if (isWatchPage()) {
-      const possibleHeaders = document.querySelectorAll('div, header, a');
-      for (let block of possibleHeaders) {
-        const text = block.textContent.trim();
-        if (text.includes('Entertainment Cinema') && (text.includes('Recovered') || text.includes('servers'))) {
-          const img = block.querySelector('img');
-          const svg = block.querySelector('svg');
-          const elemToReplace = img || svg; 
+    const homeLink = nav.querySelector('a[href="/"]:first-child, a:first-child, .flex a:first-child, [class*="logo"], [id*="logo"]');
+    if (!homeLink) return;
 
-          if (elemToReplace) {
-            const wrapper = elemToReplace.parentNode;
-            
-            if (wrapper) {
-              wrapper.style.background = 'transparent !important';
-              wrapper.style.backgroundColor = 'transparent !important';
-              wrapper.style.border = 'none !important';
-              wrapper.style.boxShadow = 'none !important';
-              wrapper.style.padding = '0 !important';
-              wrapper.style.margin = '0 !important';
-            }
-
-            elemToReplace.replaceWith(newLogo.cloneNode(true));
-            
-            const flexContainer = wrapper ? wrapper.parentNode : null;
-            if (flexContainer) {
-              flexContainer.style.display = 'flex';
-              flexContainer.style.alignItems = 'center';
-            }
-            console.log('[UI] ✅ Watch Page Header fixed!');
-            return; 
-          }
-        }
-      }
+    if (homeLink.querySelector('img[data-custom-logo="true"]')) {
       return;
     }
 
-    // ==========================================
-    // 2. HOME PAGE NAVBAR
-    // ==========================================
-    const nav = document.querySelector('nav, header, .navbar');
-    if (nav) {
-      const homeLink = nav.querySelector('a[href="/"]:first-child, a:first-child, .flex a:first-child');
-      const svg = homeLink ? homeLink.querySelector('svg') : null;
-      if (svg && !homeLink.querySelector('img')) {
-        const wrapper = svg.parentNode;
-        if (wrapper.tagName === 'A') {
-          const newLogoEl = newLogo.cloneNode(true);
-          wrapper.insertBefore(newLogoEl, svg);
-          svg.remove();
-          wrapper.style.display = 'flex';
-          wrapper.style.alignItems = 'center';
-        } else {
-          wrapper.replaceWith(newLogo.cloneNode(true));
-        }
-        console.log('[UI] ✅ Navbar logo replaced.');
-      }
+    const svg = homeLink.querySelector('svg');
+    const existingImg = homeLink.querySelector('img');
+
+    const newLogoEl = document.createElement('img');
+    newLogoEl.src = CUSTOM_LOGO_URL;
+    newLogoEl.alt = 'Entertainment Cinema';
+    newLogoEl.title = 'Entertainment Cinema';
+    newLogoEl.setAttribute('data-custom-logo', 'true');
+    newLogoEl.style.cssText = 'height: 34px; width: auto; display: inline-block; vertical-align: middle; margin-right: 12px;';
+
+    if (existingImg && !existingImg.getAttribute('data-custom-logo')) {
+      existingImg.replaceWith(newLogoEl);
+      console.log('[UI] ✅ Navbar existing img replaced with custom logo.');
+      return;
     }
 
-    // ==========================================
-    // 3. HOME PAGE BRAND BLOCK
-    // ==========================================
-    const potentialBlocks = document.querySelectorAll('div, section, footer, .flex, [class*="brand"]');
-    const blacklistTexts = ['Important Disclaimer', 'Trending', 'Movies', 'TV Shows', 'Search', 'Built by'];
-
-    for (let block of potentialBlocks) {
-      const text = block.textContent.trim();
-      
-      let isBlacklisted = false;
-      for (let badText of blacklistTexts) {
-        if (text.includes(badText)) {
-          isBlacklisted = true;
-          break;
-        }
-      }
-      if (isBlacklisted) continue;
-
-      if (text.includes('Entertainment Cinema') && text.includes('Your entertainment hub')) {
-        const svg = block.querySelector('svg');
-        if (svg) {
-          svg.replaceWith(newLogo.cloneNode(true));
-          
-          const cardWrapper = svg.parentNode;
-          if (cardWrapper) {
-            cardWrapper.style.background = 'transparent !important';
-            cardWrapper.style.backgroundColor = 'transparent !important';
-            cardWrapper.style.border = 'none !important';
-            cardWrapper.style.boxShadow = 'none !important';
-            cardWrapper.style.padding = '0 !important';
-
-            const flexContainer = cardWrapper.parentNode;
-            if (flexContainer) {
-              flexContainer.style.display = 'flex';
-              flexContainer.style.alignItems = 'center';
-            }
-          }
-          console.log('[UI] ✅ Home Page Brand Block replaced.');
-          return; 
-        }
+    if (svg) {
+      const wrapper = svg.parentNode;
+      if (wrapper && wrapper.tagName === 'A') {
+        wrapper.insertBefore(newLogoEl, svg);
+        svg.remove();
+        wrapper.style.display = 'flex';
+        wrapper.style.alignItems = 'center';
+        console.log('[UI] ✅ Navbar SVG replaced with custom logo.');
+      } else if (wrapper) {
+        svg.replaceWith(newLogoEl);
+        console.log('[UI] ✅ Navbar SVG replaced with custom logo.');
       }
     }
   }
