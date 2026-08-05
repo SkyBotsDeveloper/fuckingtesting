@@ -963,61 +963,37 @@ function injectCustomLogoOverride(html) {
   const CUSTOM_LOGO = '${logoUrl}';
   const ALT_TEXT = 'Entertainment Cinema';
 
-  function replaceBrandLogos() {
-    const brandTextPattern = /cinema|elite|logo|brand|movie|stream|tv|watch/i;
-
-    document.querySelectorAll('img, svg, [class*="logo"], [class*="brand"], [id*="logo"], [id*="brand"], nav, header').forEach(function(el) {
-      const text = (el.textContent || '').toLowerCase();
-      const attrs = [
-        el.getAttribute && el.getAttribute('alt'),
-        el.getAttribute && el.getAttribute('title'),
-        el.getAttribute && el.getAttribute('aria-label')
-      ].filter(Boolean).join(' ').toLowerCase();
-
-      const isBrandLike = brandTextPattern.test(text) || brandTextPattern.test(attrs);
-      if (!isBrandLike) return;
-
-      if (el.tagName === 'IMG') {
-        if (!el.src.includes('logo-modified')) {
-          el.src = CUSTOM_LOGO;
-          el.alt = ALT_TEXT;
-          el.title = ALT_TEXT;
-        }
-      } else if (el.tagName === 'SVG') {
-        const wrapper = el.closest('a, button, div, header, nav, li');
-        if (wrapper) {
-          wrapper.setAttribute('data-custom-logo', 'true');
-        }
+  function replaceHeaderLogos() {
+    document.querySelectorAll('nav img, header img, .navbar img, [class*="logo"] img, [class*="brand"] img, [id*="logo"] img, [id*="brand"] img').forEach(function(img) {
+      const wrapper = img.closest('nav, header, .navbar, .logo, .brand, [id*="logo"], [id*="brand"]');
+      if (!wrapper) return;
+      if (!img.src.includes('logo-modified')) {
+        img.src = CUSTOM_LOGO;
+        img.alt = ALT_TEXT;
+        img.title = ALT_TEXT;
       }
     });
 
-    document.querySelectorAll('img[src]').forEach(function(img) {
-      if (!img.src.includes('logo-modified')) {
-        const attrText = ((img.getAttribute('alt') || '') + ' ' + (img.getAttribute('title') || '')).toLowerCase();
-        if (/cinema|elite|logo|brand|movie|stream|tv|watch/i.test(attrText)) {
-          img.src = CUSTOM_LOGO;
-          img.alt = ALT_TEXT;
-          img.title = ALT_TEXT;
-        }
-      }
+    document.querySelectorAll('nav svg, header svg, .navbar svg, [class*="logo"] svg, [class*="brand"] svg, [id*="logo"] svg, [id*="brand"] svg').forEach(function(svg) {
+      const wrapper = svg.closest('nav, header, .navbar, .logo, .brand, [id*="logo"], [id*="brand"]');
+      if (!wrapper || wrapper.getAttribute('data-custom-logo')) return;
+      const logoImg = document.createElement('img');
+      logoImg.src = CUSTOM_LOGO;
+      logoImg.alt = ALT_TEXT;
+      logoImg.title = ALT_TEXT;
+      logoImg.style.maxHeight = '42px';
+      logoImg.style.width = 'auto';
+      svg.replaceWith(logoImg);
+      wrapper.setAttribute('data-custom-logo', 'true');
     });
   }
 
-  replaceBrandLogos();
-  const observer = new MutationObserver(replaceBrandLogos);
+  replaceHeaderLogos();
+  const observer = new MutationObserver(replaceHeaderLogos);
   observer.observe(document.body || document.documentElement, { childList: true, subtree: true, attributes: true });
-  setInterval(replaceBrandLogos, 500);
+  setInterval(replaceHeaderLogos, 500);
 })();
 </script>`;
-
-  html = html.replace(/src=["'][^"']*logo[^"']*["']/gi, 'src="' + logoUrl + '"');
-  html = html.replace(/src=["'][^"']*icon[^"']*["']/gi, 'src="' + logoUrl + '"');
-  html = html.replace(/src=["'][^"']*brand[^"']*["']/gi, 'src="' + logoUrl + '"');
-  html = html.replace(/src=["'][^"']*avatar[^"']*["']/gi, 'src="' + logoUrl + '"');
-  html = html.replace(/src=["']\/[^"']*\.svg["']/gi, 'src="' + logoUrl + '"');
-  html = html.replace(/<svg\b[^>]*>/gi, '<img src="' + logoUrl + '" alt="Entertainment Cinema" />');
-  html = html.replace(/alt=["'][^"']*(Elite|CinemaOS|Cinema)[^"']*["']/gi, 'alt="Entertainment Cinema"');
-  html = html.replace(/title=["'][^"']*(Elite|CinemaOS|Cinema)[^"']*["']/gi, 'title="Entertainment Cinema"');
 
   if (html.indexOf('</body>') !== -1) {
     return html.replace('</body>', logoScript + '\n</body>');
