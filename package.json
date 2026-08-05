@@ -1,0 +1,17 @@
+{
+  "name": "entertainment-cinema",
+  "version": "16.0.0",
+  "description": "Modular Reverse Proxy - Entertainment Cinema",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cheerio": "^1.0.0-rc.12"
+  },
+  "keywords": ["reverse-proxy", "cinema", "entertainment"],
+  "author": "Nishant Sharma",
+  "license": "MIT"
+}
