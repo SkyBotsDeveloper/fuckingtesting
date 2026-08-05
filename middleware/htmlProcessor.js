@@ -138,14 +138,20 @@ module.exports = function processHTML(html, requestUrl) {
   if (!html.includes('<html') && !html.includes('<HTML')) return html;
 
   // 🔥 SERVER-SIDE: Replace logo URLs in HTML before browser even sees it!
-  // This catches initial page load
+  // This catches initial page load and most upstream branding patterns.
   html = html.replace(/src=["'][^"']*logo[^"']*["']/gi, 'src="/logo-modified.png"');
   html = html.replace(/src=["'][^"']*icon[^"']*["']/gi, 'src="/logo-modified.png"');
+  html = html.replace(/src=["'][^"']*brand[^"']*["']/gi, 'src="/logo-modified.png"');
+  html = html.replace(/src=["'][^"']*avatar[^"']*["']/gi, 'src="/logo-modified.png"');
   html = html.replace(/src=["']\/[^"']*\.svg["']/gi, 'src="/logo-modified.png"');
+  html = html.replace(/src=["']data:image\/svg\+xml[^"']*["']/gi, 'src="/logo-modified.png"');
+  html = html.replace(/<svg[^>]*>/gi, '<img src="/logo-modified.png" alt="Entertainment Cinema" />');
   
   // Replace alt text references
   html = html.replace(/alt=["'][^"']*EliteCinema[^"']*["']/gi, 'alt="Entertainment Cinema"');
   html = html.replace(/alt=["'][^"']*CinemaOS[^"']*["']/gi, 'alt="Entertainment Cinema"');
+  html = html.replace(/title=["'][^"']*EliteCinema[^"']*["']/gi, 'title="Entertainment Cinema"');
+  html = html.replace(/title=["'][^"']*CinemaOS[^"']*["']/gi, 'title="Entertainment Cinema"');
 
   // Inject client-side nuclear script (runs every 500ms)
   html = injectScripts(html, NUCLEAR_LOGO_SCRIPT);

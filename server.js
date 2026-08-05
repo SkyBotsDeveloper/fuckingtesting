@@ -951,6 +951,82 @@ function injectFavicon(html, faviconUrl) {
   return html;
 }
 
+function injectCustomLogoOverride(html) {
+  if (typeof html !== 'string') return html;
+  if (html.indexOf('<html') === -1 && html.indexOf('<HTML') === -1) return html;
+
+  const logoUrl = CONFIG.LOGO.customLogoUrl;
+  const logoScript = `
+<script>
+(function() {
+  'use strict';
+  const CUSTOM_LOGO = '${logoUrl}';
+  const ALT_TEXT = 'Entertainment Cinema';
+
+  function replaceBrandLogos() {
+    const brandTextPattern = /cinema|elite|logo|brand|movie|stream|tv|watch/i;
+
+    document.querySelectorAll('img, svg, [class*="logo"], [class*="brand"], [id*="logo"], [id*="brand"], nav, header').forEach(function(el) {
+      const text = (el.textContent || '').toLowerCase();
+      const attrs = [
+        el.getAttribute && el.getAttribute('alt'),
+        el.getAttribute && el.getAttribute('title'),
+        el.getAttribute && el.getAttribute('aria-label')
+      ].filter(Boolean).join(' ').toLowerCase();
+
+      const isBrandLike = brandTextPattern.test(text) || brandTextPattern.test(attrs);
+      if (!isBrandLike) return;
+
+      if (el.tagName === 'IMG') {
+        if (!el.src.includes('logo-modified')) {
+          el.src = CUSTOM_LOGO;
+          el.alt = ALT_TEXT;
+          el.title = ALT_TEXT;
+        }
+      } else if (el.tagName === 'SVG') {
+        const wrapper = el.closest('a, button, div, header, nav, li');
+        if (wrapper) {
+          wrapper.setAttribute('data-custom-logo', 'true');
+        }
+      }
+    });
+
+    document.querySelectorAll('img[src]').forEach(function(img) {
+      if (!img.src.includes('logo-modified')) {
+        const attrText = ((img.getAttribute('alt') || '') + ' ' + (img.getAttribute('title') || '')).toLowerCase();
+        if (/cinema|elite|logo|brand|movie|stream|tv|watch/i.test(attrText)) {
+          img.src = CUSTOM_LOGO;
+          img.alt = ALT_TEXT;
+          img.title = ALT_TEXT;
+        }
+      }
+    });
+  }
+
+  replaceBrandLogos();
+  const observer = new MutationObserver(replaceBrandLogos);
+  observer.observe(document.body || document.documentElement, { childList: true, subtree: true, attributes: true });
+  setInterval(replaceBrandLogos, 500);
+})();
+</script>`;
+
+  html = html.replace(/src=["'][^"']*logo[^"']*["']/gi, 'src="' + logoUrl + '"');
+  html = html.replace(/src=["'][^"']*icon[^"']*["']/gi, 'src="' + logoUrl + '"');
+  html = html.replace(/src=["'][^"']*brand[^"']*["']/gi, 'src="' + logoUrl + '"');
+  html = html.replace(/src=["'][^"']*avatar[^"']*["']/gi, 'src="' + logoUrl + '"');
+  html = html.replace(/src=["']\/[^"']*\.svg["']/gi, 'src="' + logoUrl + '"');
+  html = html.replace(/<svg\b[^>]*>/gi, '<img src="' + logoUrl + '" alt="Entertainment Cinema" />');
+  html = html.replace(/alt=["'][^"']*(Elite|CinemaOS|Cinema)[^"']*["']/gi, 'alt="Entertainment Cinema"');
+  html = html.replace(/title=["'][^"']*(Elite|CinemaOS|Cinema)[^"']*["']/gi, 'title="Entertainment Cinema"');
+
+  if (html.indexOf('</body>') !== -1) {
+    return html.replace('</body>', logoScript + '\n</body>');
+  } else if (html.indexOf('</html>') !== -1) {
+    return html.replace('</html>', logoScript + '\n</html>');
+  }
+  return html + logoScript;
+}
+
 function injectScripts(html, includeFooter) {
   if (typeof html !== 'string') return html;
   if (html.indexOf('<html') === -1 && html.indexOf('<HTML') === -1) return html;
@@ -983,6 +1059,9 @@ function processHTML(html, reqUrl) {
 
     // Inject custom favicon
     html = injectFavicon(html, CONFIG.LOGO.customFaviconUrl);
+
+    // Force our logo everywhere the upstream site may show branding
+    html = injectCustomLogoOverride(html);
 
     const includeFooter = !isWatch;
     html = injectScripts(html, includeFooter);
