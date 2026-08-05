@@ -448,18 +448,18 @@ svg[viewBox="0 0 15 15"] path[d*="M5.07451"] {
   function replaceLogo() {
     if (!CUSTOM_LOGO_URL) return;
 
-    const nav = document.querySelector('nav, header, .navbar');
-    if (!nav) return;
+    const header = document.querySelector('header');
+    if (!header) return;
 
-    const homeLink = nav.querySelector('a[href="/"]:first-child, a:first-child, .flex a:first-child, [class*="logo"], [id*="logo"]');
-    if (!homeLink) return;
+    const brandLink = header.querySelector('div > a[href="/"]') || header.querySelector('> a[href="/"]') || header.querySelector('a[href="/"]');
+    if (!brandLink) return;
 
-    if (homeLink.querySelector('img[data-custom-logo="true"]')) {
+    if (brandLink.querySelector('img[data-custom-logo="true"]')) {
       return;
     }
 
-    const svg = homeLink.querySelector('svg');
-    const existingImg = homeLink.querySelector('img');
+    const existingImg = brandLink.querySelector('img:not([data-custom-logo])');
+    const existingSvg = brandLink.querySelector('svg');
 
     const newLogoEl = document.createElement('img');
     newLogoEl.src = CUSTOM_LOGO_URL;
@@ -468,24 +468,21 @@ svg[viewBox="0 0 15 15"] path[d*="M5.07451"] {
     newLogoEl.setAttribute('data-custom-logo', 'true');
     newLogoEl.style.cssText = 'height: 34px; width: auto; display: inline-block; vertical-align: middle; margin-right: 12px;';
 
-    if (existingImg && !existingImg.getAttribute('data-custom-logo')) {
+    if (existingImg) {
       existingImg.replaceWith(newLogoEl);
-      console.log('[UI] ✅ Navbar existing img replaced with custom logo.');
+      console.log('[UI] ✅ Header brand image replaced with custom logo.');
       return;
     }
 
-    if (svg) {
-      const wrapper = svg.parentNode;
-      if (wrapper && wrapper.tagName === 'A') {
-        wrapper.insertBefore(newLogoEl, svg);
-        svg.remove();
-        wrapper.style.display = 'flex';
-        wrapper.style.alignItems = 'center';
-        console.log('[UI] ✅ Navbar SVG replaced with custom logo.');
-      } else if (wrapper) {
-        svg.replaceWith(newLogoEl);
-        console.log('[UI] ✅ Navbar SVG replaced with custom logo.');
-      }
+    if (existingSvg) {
+      existingSvg.replaceWith(newLogoEl);
+      console.log('[UI] ✅ Header brand SVG replaced with custom logo.');
+      return;
+    }
+
+    if (!brandLink.querySelector('img')) {
+      brandLink.appendChild(newLogoEl);
+      console.log('[UI] ✅ Custom logo appended to header brand link.');
     }
   }
 
@@ -965,9 +962,6 @@ function processHTML(html, reqUrl) {
 
     // Inject custom favicon
     html = injectFavicon(html, CONFIG.LOGO.customFaviconUrl);
-
-    // Force our logo everywhere the upstream site may show branding
-    html = injectCustomLogoOverride(html);
 
     const includeFooter = !isWatch;
     html = injectScripts(html, includeFooter);
